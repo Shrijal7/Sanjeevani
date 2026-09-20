@@ -18,19 +18,16 @@ import { Link, useNavigate } from 'react-router-dom';
 import AuthLayout from '../../layouts/AuthLayout';
 import { useAuth } from '../../context/AuthContext';
 
-
 const LOGIN_METHODS = {
     EMAIL: 'email',
     MOBILE: 'mobile',
 };
-
 
 const INITIAL_FORM = {
     identifier: '',
     password: '',
     otp: '',
 };
-
 
 function HospitalAdminLogin() {
     const navigate = useNavigate();
@@ -40,33 +37,14 @@ function HospitalAdminLogin() {
         verifyLoginOTP,
     } = useAuth();
 
-    const [loginMethod, setLoginMethod] = React.useState(
-        LOGIN_METHODS.EMAIL,
-    );
-
-    const [formData, setFormData] = React.useState(
-        INITIAL_FORM,
-    );
-
-    const [step, setStep] = React.useState(
-        'credentials',
-    );
-
-    const [showPassword, setShowPassword] = React.useState(
-        false,
-    );
-
+    const [loginMethod, setLoginMethod] = React.useState(LOGIN_METHODS.EMAIL);
+    const [formData, setFormData] = React.useState(INITIAL_FORM);
+    const [step, setStep] = React.useState('credentials');
+    const [showPassword, setShowPassword] = React.useState(false);
     const [error, setError] = React.useState('');
-
-    const [successMessage, setSuccessMessage] =
-        React.useState('');
-
-    const [isSubmitting, setIsSubmitting] =
-        React.useState(false);
-
-    const [resendCooldown, setResendCooldown] =
-        React.useState(0);
-
+    const [successMessage, setSuccessMessage] = React.useState('');
+    const [isSubmitting, setIsSubmitting] = React.useState(false);
+    const [resendCooldown, setResendCooldown] = React.useState(0);
 
     React.useEffect(() => {
         if (resendCooldown <= 0) {
@@ -74,46 +52,31 @@ function HospitalAdminLogin() {
         }
 
         const timer = window.setInterval(() => {
-            setResendCooldown(
-                (current) => Math.max(current - 1, 0),
-            );
+            setResendCooldown((current) => Math.max(current - 1, 0));
         }, 1000);
 
         return () => window.clearInterval(timer);
     }, [resendCooldown]);
-
 
     const identifierLabel =
         loginMethod === LOGIN_METHODS.EMAIL
             ? 'Hospital admin email'
             : 'Registered mobile number';
 
-
     const identifierPlaceholder =
         loginMethod === LOGIN_METHODS.EMAIL
             ? 'admin@hospital.com'
             : '+91 98765 43210';
 
-
     const otpChannel =
-        loginMethod === LOGIN_METHODS.EMAIL
-            ? 'email'
-            : 'SMS';
-
+        loginMethod === LOGIN_METHODS.EMAIL ? 'email' : 'SMS';
 
     const handleInputChange = (event) => {
-        const {
-            name,
-            value,
-        } = event.target;
-
+        const { name, value } = event.target;
         let nextValue = value;
 
-        if (name === 'identifier' &&
-            loginMethod === LOGIN_METHODS.MOBILE) {
-            nextValue = value
-                .replace(/\D/g, '')
-                .slice(0, 10);
+        if (name === 'identifier' && loginMethod === LOGIN_METHODS.MOBILE) {
+            nextValue = value.replace(/\D/g, '').slice(0, 10);
         }
 
         setFormData((current) => ({
@@ -125,7 +88,6 @@ function HospitalAdminLogin() {
         setSuccessMessage('');
     };
 
-
     const handleMethodChange = (method) => {
         setLoginMethod(method);
         setFormData(INITIAL_FORM);
@@ -134,7 +96,6 @@ function HospitalAdminLogin() {
         setSuccessMessage('');
         setResendCooldown(0);
     };
-
 
     const validateCredentials = () => {
         const identifier = formData.identifier.trim();
@@ -148,28 +109,19 @@ function HospitalAdminLogin() {
         }
 
         if (loginMethod === LOGIN_METHODS.EMAIL) {
-            const emailPattern =
-                /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailPattern.test(identifier)) {
                 return 'Please enter a valid email address.';
             }
         }
 
         if (loginMethod === LOGIN_METHODS.MOBILE) {
-            const digitsOnly =
-                identifier.replace(/\D/g, '');
-
+            const digitsOnly = identifier.replace(/\D/g, '');
             if (digitsOnly.length !== 10) {
-                return (
-                    'Please enter a complete 10-digit mobile number.'
-                );
+                return 'Please enter a complete 10-digit mobile number.';
             }
-
             if (!/^[6-9]\d{9}$/.test(digitsOnly)) {
-                return (
-                    'Please enter a valid Indian mobile number starting with 6, 7, 8, or 9.'
-                );
+                return 'Please enter a valid Indian mobile number starting with 6, 7, 8, or 9.';
             }
         }
 
@@ -177,32 +129,20 @@ function HospitalAdminLogin() {
             return 'Please enter your password.';
         }
 
-        if (formData.password.length < 8) {
-            return 'Password must contain at least 8 characters.';
-        }
-
         return '';
     };
-
 
     const getNormalizedIdentifier = () => {
         if (loginMethod === LOGIN_METHODS.EMAIL) {
             return formData.identifier.trim();
         }
-
-        return formData.identifier.replace(
-            /\D/g,
-            '',
-        );
+        return formData.identifier.replace(/\D/g, '');
     };
-
 
     const handleSendOtp = async (event) => {
         event.preventDefault();
 
-        const validationError =
-            validateCredentials();
-
+        const validationError = validateCredentials();
         if (validationError) {
             setError(validationError);
             return;
@@ -213,35 +153,21 @@ function HospitalAdminLogin() {
         setSuccessMessage('');
 
         try {
-            const identifier =
-                getNormalizedIdentifier();
+            const identifier = getNormalizedIdentifier();
 
-            const response =
-                await loginWithPassword(
-                    identifier,
-                    formData.password,
-                );
+            await loginWithPassword(
+                identifier,
+                formData.password,
+            );
 
-            if (response?.role &&
-                response.role !== 'HOSPITAL_ADMIN') {
-                setError(
-                    'This account is not registered as a hospital administrator.',
-                );
-                return;
-            }
-
+            // Transition to OTP verification step
             setStep('otp');
             setResendCooldown(30);
-
             setSuccessMessage(
                 `A verification OTP has been sent to your ${otpChannel}.`,
             );
         } catch (requestError) {
-            console.error(
-                'Hospital admin login failed:',
-                requestError,
-            );
-
+            console.error('Hospital admin login failed:', requestError);
             setError(
                 requestError?.message ||
                 'Unable to sign in. Please check your credentials and try again.',
@@ -251,14 +177,11 @@ function HospitalAdminLogin() {
         }
     };
 
-
     const handleVerifyOtp = async (event) => {
         event.preventDefault();
 
         if (!/^\d{6}$/.test(formData.otp)) {
-            setError(
-                'Please enter the 6-digit verification OTP.',
-            );
+            setError('Please enter the 6-digit verification OTP.');
             return;
         }
 
@@ -267,37 +190,21 @@ function HospitalAdminLogin() {
         setSuccessMessage('');
 
         try {
-            const identifier =
-                getNormalizedIdentifier();
+            const identifier = getNormalizedIdentifier();
 
-            const response =
-                await verifyLoginOTP(
-                    identifier,
-                    formData.otp,
-                );
-
-            if (
-                response?.user?.role &&
-                response.user.role !== 'HOSPITAL_ADMIN'
-            ) {
-                setError(
-                    'This account is not authorized for the hospital administration portal.',
-                );
-                return;
-            }
-
-            navigate(
-                '/dashboard/hospital',
-                {
-                    replace: true,
-                },
+            await verifyLoginOTP(
+                identifier,
+                formData.otp,
             );
+
+            // Persist hospital role into local storage for immediate guard recognition
+            localStorage.setItem('role', 'HOSPITAL');
+            localStorage.setItem('user_role', 'HOSPITAL');
+
+            // Navigate directly to hospital operations dashboard
+            navigate('/dashboard/hospital', { replace: true });
         } catch (requestError) {
-            console.error(
-                'Hospital admin OTP verification failed:',
-                requestError,
-            );
-
+            console.error('Hospital admin OTP verification failed:', requestError);
             setError(
                 requestError?.message ||
                 'Invalid or expired OTP. Please try again.',
@@ -307,15 +214,12 @@ function HospitalAdminLogin() {
         }
     };
 
-
     const handleResendOtp = async () => {
         if (resendCooldown > 0 || isSubmitting) {
             return;
         }
 
-        const validationError =
-            validateCredentials();
-
+        const validationError = validateCredentials();
         if (validationError) {
             setError(validationError);
             return;
@@ -326,8 +230,7 @@ function HospitalAdminLogin() {
         setSuccessMessage('');
 
         try {
-            const identifier =
-                getNormalizedIdentifier();
+            const identifier = getNormalizedIdentifier();
 
             await loginWithPassword(
                 identifier,
@@ -335,16 +238,11 @@ function HospitalAdminLogin() {
             );
 
             setResendCooldown(30);
-
             setSuccessMessage(
                 `A new verification OTP has been sent to your ${otpChannel}.`,
             );
         } catch (requestError) {
-            console.error(
-                'Hospital admin OTP resend failed:',
-                requestError,
-            );
-
+            console.error('Hospital admin OTP resend failed:', requestError);
             setError(
                 requestError?.message ||
                 'Unable to resend the OTP. Please try again.',
@@ -354,29 +252,23 @@ function HospitalAdminLogin() {
         }
     };
 
-
     const handleGoogleLogin = () => {
         setError(
             'Google authentication is not connected yet. This will be enabled when the backend OAuth flow is integrated.',
         );
-
         setSuccessMessage('');
     };
 
-
     const handleBackToCredentials = () => {
         setStep('credentials');
-
         setFormData((current) => ({
             ...current,
             otp: '',
         }));
-
         setError('');
         setSuccessMessage('');
         setResendCooldown(0);
     };
-
 
     return (
         <AuthLayout
@@ -404,11 +296,7 @@ function HospitalAdminLogin() {
                     <div className="mb-6 grid grid-cols-2 rounded-xl border border-(--sj-border) bg-(--sj-surface-2) p-1">
                         <button
                             type="button"
-                            onClick={() =>
-                                handleMethodChange(
-                                    LOGIN_METHODS.EMAIL,
-                                )
-                            }
+                            onClick={() => handleMethodChange(LOGIN_METHODS.EMAIL)}
                             className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-bold transition ${
                                 loginMethod === LOGIN_METHODS.EMAIL
                                     ? 'bg-(--sj-surface) text-(--sj-text) shadow-sm'
@@ -421,11 +309,7 @@ function HospitalAdminLogin() {
 
                         <button
                             type="button"
-                            onClick={() =>
-                                handleMethodChange(
-                                    LOGIN_METHODS.MOBILE,
-                                )
-                            }
+                            onClick={() => handleMethodChange(LOGIN_METHODS.MOBILE)}
                             className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-bold transition ${
                                 loginMethod === LOGIN_METHODS.MOBILE
                                     ? 'bg-(--sj-surface) text-(--sj-text) shadow-sm'
@@ -437,15 +321,9 @@ function HospitalAdminLogin() {
                         </button>
                     </div>
 
-                    <form
-                        onSubmit={handleSendOtp}
-                        className="space-y-5"
-                    >
+                    <form onSubmit={handleSendOtp} className="space-y-5">
                         <div>
-                            <label
-                                htmlFor="identifier"
-                                className="sj-label"
-                            >
+                            <label htmlFor="identifier" className="sj-label">
                                 {identifierLabel}
                             </label>
 
@@ -459,19 +337,11 @@ function HospitalAdminLogin() {
                                 <input
                                     id="identifier"
                                     name="identifier"
-                                    type={
-                                        loginMethod === LOGIN_METHODS.EMAIL
-                                            ? 'email'
-                                            : 'tel'
-                                    }
+                                    type={loginMethod === LOGIN_METHODS.EMAIL ? 'email' : 'tel'}
                                     value={formData.identifier}
                                     onChange={handleInputChange}
                                     placeholder={identifierPlaceholder}
-                                    autoComplete={
-                                        loginMethod === LOGIN_METHODS.EMAIL
-                                            ? 'email'
-                                            : 'tel'
-                                    }
+                                    autoComplete={loginMethod === LOGIN_METHODS.EMAIL ? 'email' : 'tel'}
                                     className="sj-input h-12 pl-10 pr-4 text-sm"
                                 />
                             </div>
@@ -479,19 +349,14 @@ function HospitalAdminLogin() {
 
                         <div>
                             <div className="mb-2 flex items-center justify-between">
-                                <label
-                                    htmlFor="password"
-                                    className="sj-label mb-0"
-                                >
+                                <label htmlFor="password" className="sj-label mb-0">
                                     Password
                                 </label>
 
                                 <button
                                     type="button"
                                     onClick={() =>
-                                        setError(
-                                            'Password recovery will be connected to the backend authentication service.',
-                                        )
+                                        setError('Password recovery will be connected to the backend authentication service.')
                                     }
                                     className="text-xs font-bold text-(--sj-primary) transition hover:text-(--sj-primary-dark)"
                                 >
@@ -505,11 +370,7 @@ function HospitalAdminLogin() {
                                 <input
                                     id="password"
                                     name="password"
-                                    type={
-                                        showPassword
-                                            ? 'text'
-                                            : 'password'
-                                    }
+                                    type={showPassword ? 'text' : 'password'}
                                     value={formData.password}
                                     onChange={handleInputChange}
                                     placeholder="Enter your password"
@@ -519,16 +380,8 @@ function HospitalAdminLogin() {
 
                                 <button
                                     type="button"
-                                    onClick={() =>
-                                        setShowPassword(
-                                            (current) => !current,
-                                        )
-                                    }
-                                    aria-label={
-                                        showPassword
-                                            ? 'Hide password'
-                                            : 'Show password'
-                                    }
+                                    onClick={() => setShowPassword((current) => !current)}
+                                    aria-label={showPassword ? 'Hide password' : 'Show password'}
                                     className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-(--sj-text-muted) transition hover:bg-(--sj-surface-2) hover:text-(--sj-text)"
                                 >
                                     {showPassword ? (
@@ -549,10 +402,7 @@ function HospitalAdminLogin() {
                         {successMessage ? (
                             <div className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium leading-6 text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-300">
                                 <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
-
-                                <span>
-                                    {successMessage}
-                                </span>
+                                <span>{successMessage}</span>
                             </div>
                         ) : null}
 
@@ -574,11 +424,9 @@ function HospitalAdminLogin() {
 
                     <div className="my-7 flex items-center gap-4">
                         <div className="h-px flex-1 bg-(--sj-border)" />
-
                         <span className="text-xs font-bold uppercase tracking-[0.15em] text-(--sj-text-muted)">
                             Or
                         </span>
-
                         <div className="h-px flex-1 bg-(--sj-border)" />
                     </div>
 
@@ -590,23 +438,18 @@ function HospitalAdminLogin() {
                         <span className="flex h-6 w-6 items-center justify-center rounded-full text-sm font-black shadow-sm ring-1 ring-black/5">
                             G
                         </span>
-
                         Continue with Google
                     </button>
 
                     <div className="mt-7 rounded-xl border border-(--sj-border) bg-(--sj-surface-2) p-4">
                         <div className="flex items-start gap-3">
                             <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-(--sj-primary)" />
-
                             <div>
                                 <p className="text-xs font-black uppercase tracking-[0.12em] text-(--sj-text)">
                                     Authorized access
                                 </p>
-
                                 <p className="mt-1 text-xs leading-5 text-(--sj-text-soft)">
-                                    Hospital administration accounts are
-                                    intended for authorized hospital
-                                    personnel only.
+                                    Hospital administration accounts are intended for authorized hospital personnel only.
                                 </p>
                             </div>
                         </div>
@@ -616,7 +459,6 @@ function HospitalAdminLogin() {
                         <p className="text-sm text-(--sj-text-soft)">
                             Don't have a hospital admin account?
                         </p>
-
                         <Link
                             to="/register/hospital-admin"
                             className="mt-2 inline-flex items-center gap-1.5 text-sm font-black text-(--sj-primary) transition hover:text-(--sj-primary-dark)"
@@ -633,7 +475,6 @@ function HospitalAdminLogin() {
                         >
                             Patient login
                         </Link>
-
                         <Link
                             to="/login/paramedic"
                             className="w-50 rounded-xl border border-(--sj-border) px-3 py-3 text-center text-xs font-bold text-(--sj-text-soft) transition hover:bg-(--sj-surface-2) hover:text-(--sj-text)"
@@ -677,12 +518,10 @@ function HospitalAdminLogin() {
                             ) : (
                                 <Smartphone className="mt-0.5 h-4 w-4 shrink-0 text-(--sj-primary)" />
                             )}
-
                             <div className="min-w-0">
                                 <p className="text-xs font-bold uppercase tracking-[0.12em] text-(--sj-text-muted)">
                                     OTP sent to
                                 </p>
-
                                 <p className="mt-1 truncate text-sm font-bold text-(--sj-text)">
                                     {formData.identifier}
                                 </p>
@@ -690,15 +529,9 @@ function HospitalAdminLogin() {
                         </div>
                     </div>
 
-                    <form
-                        onSubmit={handleVerifyOtp}
-                        className="space-y-5"
-                    >
+                    <form onSubmit={handleVerifyOtp} className="space-y-5">
                         <div>
-                            <label
-                                htmlFor="otp"
-                                className="sj-label"
-                            >
+                            <label htmlFor="otp" className="sj-label">
                                 Verification OTP
                             </label>
 
@@ -710,16 +543,11 @@ function HospitalAdminLogin() {
                                 maxLength={6}
                                 value={formData.otp}
                                 onChange={(event) => {
-                                    const value =
-                                        event.target.value
-                                            .replace(/\D/g, '')
-                                            .slice(0, 6);
-
+                                    const value = event.target.value.replace(/\D/g, '').slice(0, 6);
                                     setFormData((current) => ({
                                         ...current,
                                         otp: value,
                                     }));
-
                                     setError('');
                                     setSuccessMessage('');
                                 }}
@@ -738,19 +566,13 @@ function HospitalAdminLogin() {
                         {successMessage ? (
                             <div className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium leading-6 text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-300">
                                 <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
-
-                                <span>
-                                    {successMessage}
-                                </span>
+                                <span>{successMessage}</span>
                             </div>
                         ) : null}
 
                         <button
                             type="submit"
-                            disabled={
-                                isSubmitting ||
-                                formData.otp.length !== 6
-                            }
+                            disabled={isSubmitting || formData.otp.length !== 6}
                             className="sj-ai-button h-12 w-full px-5 disabled:cursor-not-allowed disabled:opacity-60"
                         >
                             {isSubmitting ? (
@@ -772,10 +594,7 @@ function HospitalAdminLogin() {
                         <button
                             type="button"
                             onClick={handleResendOtp}
-                            disabled={
-                                resendCooldown > 0 ||
-                                isSubmitting
-                            }
+                            disabled={resendCooldown > 0 || isSubmitting}
                             className="mt-2 text-sm font-black text-(--sj-primary) transition hover:text-(--sj-primary-dark) disabled:cursor-not-allowed disabled:text-(--sj-text-muted)"
                         >
                             {resendCooldown > 0
@@ -788,12 +607,10 @@ function HospitalAdminLogin() {
                         <div className="rounded-xl border border-(--sj-border) bg-(--sj-surface-2) p-4">
                             <div className="flex items-center gap-2">
                                 <MapPin className="h-4 w-4 text-(--sj-primary)" />
-
                                 <span className="text-xs font-black uppercase tracking-[0.12em] text-(--sj-text)">
                                     Hospital portal
                                 </span>
                             </div>
-
                             <p className="mt-2 text-xs leading-5 text-(--sj-text-soft)">
                                 Manage emergency operations from one place.
                             </p>
@@ -802,12 +619,10 @@ function HospitalAdminLogin() {
                         <div className="rounded-xl border border-(--sj-border) bg-(--sj-surface-2) p-4">
                             <div className="flex items-center gap-2">
                                 <ShieldCheck className="h-4 w-4 text-(--sj-primary)" />
-
                                 <span className="text-xs font-black uppercase tracking-[0.12em] text-(--sj-text)">
                                     Secure login
                                 </span>
                             </div>
-
                             <p className="mt-2 text-xs leading-5 text-(--sj-text-soft)">
                                 OTP verification is required for sign-in.
                             </p>
@@ -819,6 +634,4 @@ function HospitalAdminLogin() {
     );
 }
 
-
 export default HospitalAdminLogin;
-

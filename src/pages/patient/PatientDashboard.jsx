@@ -1,6 +1,6 @@
 import React from 'react';
+import EmergencyTrackerWidget from './EmergencyTrackerWidget';
 import {
-    Bell,
     ChevronRight,
     Clock3,
     FileHeart,
@@ -36,8 +36,7 @@ const recentEmergencies = [
 ];
 
 function PatientDashboard() {
-    const { theme, toggleTheme } = useTheme();
-    const isDark = theme === 'dark';
+    const { theme } = useTheme();
 
     return (
         <div className="sanjeevani-page min-h-screen">
@@ -76,58 +75,10 @@ function PatientDashboard() {
                 </section>
 
                 {/* =====================================================
-                    SOS CARD
+                    LIVE SOS & TELEMETRY TRACKER WIDGET
                 ===================================================== */}
-                <section className="relative mb-8 overflow-hidden rounded-3xl border border-red-500/15 bg-red-500/[0.035] p-6 sm:p-8">
-                    {/* Decorative background */}
-                    <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-red-500/4 blur-3xl" />
-
-                    <div className="relative flex flex-col gap-7 lg:flex-row lg:items-center lg:justify-between">
-                        <div className="max-w-xl">
-                            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-red-500/15 bg-red-500/6 px-3 py-1.5">
-                                <span className="h-2 w-2 rounded-full bg-red-500" />
-
-                                <span className="text-[10px] font-black uppercase tracking-[0.15em] text-red-600 dark:text-red-400">
-                                    Emergency assistance
-                                </span>
-                            </div>
-
-                            <h2 className="text-2xl font-black tracking-tight text-(--sj-text) sm:text-3xl">
-                                Need emergency help?
-                            </h2>
-
-                            <p className="mt-3 text-sm leading-6 text-(--sj-text-soft)">
-                                Press SOS when you need urgent medical
-                                assistance. Your location can be shared with
-                                the emergency coordination network.
-                            </p>
-
-                            <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold text-(--sj-text-muted)">
-                                <span className="flex items-center gap-1.5">
-                                    <MapPin className="h-3.5 w-3.5" />
-                                    Location enabled
-                                </span>
-
-                                <span className="flex items-center gap-1.5">
-                                    <ShieldCheck className="h-3.5 w-3.5" />
-                                    Secure coordination
-                                </span>
-                            </div>
-                        </div>
-
-                        <div className="shrink-0 lg:pr-4">
-                            <Link
-                                to="/dashboard/patient/emergency"
-                                className="sj-sos-button w-full px-10 text-base sm:w-auto"
-                            >
-                                SEND SOS
-                            </Link>
-
-                            <p className="mt-3 text-center text-[11px] font-medium text-(--sj-text-muted)">
-                                For genuine emergencies
-                            </p>
-                        </div>
-                    </div>
+                <section className="mb-8">
+                    <EmergencyTrackerWidget />
                 </section>
 
                 {/* =====================================================
